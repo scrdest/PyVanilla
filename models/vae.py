@@ -16,21 +16,33 @@ mnist_transf = transforms.Compose([
 ])
 
 import torch.utils.data.dataloader as loader
-import torchvision.transforms as transforms
-import torchvision.datasets.mnist as mnist_datasets
 
-from logic.constants import *
 from logic.utils import *
 
 
 class ModularVAE(NNModule):
-
-    def __init__(self, modules=None, *args, **kwargs):
+    def __init__(self, pipelines, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        self.pipelines = pipelines
 
 
-    def forward(self, *args, **kwargs):
-        pass
+    def forward(self, *input, **kwargs):
+        pipe_inputs = {}
+        pipe_outputs = {}
+        current_output = input
+        for pipeline in self.pipelines:
+            pipe_inputs[pipeline] = current_output
+            current_output = pipeline.forward(*current_output)
+            pipe_outputs[pipeline] = current_output
+        return current_output, pipe_inputs, pipe_outputs
+
+
+    def get_loss(self, inputs_per_pipe, outputs_per_pipe):
+        loss_per_pipe = {}
+        for pipeline in self.pipelines:
+            pipe_inp = inputs_per_pipe.get(pipeline)
+            pipe_out = outputs_per_pipe.get(pipeline)
+            loss_per_pipe[pipeline] = pipeline.get_loss(pipe_inp, pipe_out)
 
 
     def training_step(self, batch, batch_idx, *args, **kwargs):

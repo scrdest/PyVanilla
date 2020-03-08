@@ -1,7 +1,59 @@
+import torch
+import torch.nn as NN
+
+from logic.constants import *
 from logic.samplers import BaseVISampler
+
+from functools import wraps
 
 
 class IsoGaussVISampler(BaseVISampler):
-    def __init__(self, *args, **kwargs):
+    def __init__(self, input_size, latent_dims, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
+        self.input_size = input_size
+        self.latent_dims = latent_dims
+
+        self.mean_transform = NN.Linear(input_size, latent_dims)
+        self.stddev_transform = NN.Linear(input_size, latent_dims)
+
+
+    def encode(self, input, **kwargs):
+        mean = self.mean_transform(input)
+        log_var = self.stddev_transform(input)
+        return mean, log_var
+
+
+    def reparameterize(self, mean, log_var):
+        stddev = torch.exp(0.5 * log_var)
+        noise = torch.randn_like(stddev)
+        return mean + noise * stddev
+
+
+    def forward(self, input, **kwargs):
+        mean, log_var = self.encode(input)
+        z = self.reparameterize(mean, log_var)
+        return z, input, mean, log_var
+
+
+
+
+def with_isogauss_sampler(*sampler_args, **sampler_kwargs):
+
+    def _parameterized_deco(constructor):
+        _sampler_kws = sampler_kwargs or {}
+        sampler = IsoGaussVISampler(*sampler_args, **_sampler_kws)
+
+        @wraps(constructor)
+        def _wrapper(*raw_args, **raw_kwargs):
+            constructor_args = raw_args
+            constructor_kwargs = raw_kwargs.copy()
+            constructor_kwargs.update({
+                PIPE_ARG_SAMPLER: sampler
+            })
+            decorated = constructor(*constructor_args, ** constructor_kwargs)
+            return decorated
+
+        return _wrapper
+
+    return _parameterized_deco

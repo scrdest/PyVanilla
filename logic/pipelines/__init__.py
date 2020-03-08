@@ -1,0 +1,1 @@
+from logic.pipelines.base import BasePipeline

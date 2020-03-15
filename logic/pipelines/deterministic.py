@@ -13,6 +13,9 @@ class DeterministicPipeline(BasePipeline):
         decoded = self.decoder.forward(encoded)
         return decoded
 
+    def get_loss(self, inputs, outputs, *args, **kwargs):
+        pass
+
 
 def build_deterministic_pipe(*args, **kwargs):
     passed_kwargs = kwargs.copy()

@@ -21,19 +21,9 @@ class FfDecoder(BaseDecoder):
                 dec_out_size = int(min(input_size, dec_inp_size * upscale))
                 if warn and dec_out_size == input_size: print("Warning: max decoder size reached!")
 
-            newdec_weight = torch.Tensor(dec_out_size, dec_inp_size)
-            NN.init.normal_(newdec_weight, 0, 10)
-            newdec_weight_param = NN.Parameter(newdec_weight, requires_grad=True)
-            newdec_weight_param.cuda()
-            self.weights.append(newdec_weight_param)
-
-            newdec_bias = torch.Tensor(dec_out_size)
-            NN.init.normal_(newdec_bias, 0, 10)
-            newdec_bias_param = NN.Parameter(newdec_bias, requires_grad=True)
-            newdec_bias_param.cuda()
-            self.biases.append(newdec_bias_param)
-
-            newdec = (NN.functional.linear, (newdec_weight_param, newdec_bias_param))
+            newdec = torch.nn.Linear(dec_inp_size, dec_out_size, bias=True)
+            NN.init.normal_(newdec.weight, 0, 10)
+            NN.init.normal_(newdec.bias, 0, 10)
             self.layers.setdefault(i, []).append(newdec)
 
             dec_inp_size = dec_out_size
@@ -41,8 +31,25 @@ class FfDecoder(BaseDecoder):
         self.out_size = dec_out_size
 
 
-    def forward(self, input, **kwargs):
-        pass
+    def forward(self, data, *args, **kwargs):
+        decoder_dict = self.layers
+        decoding = data[-1]
+        maxkey = max(decoder_dict.keys())
+
+        for idx, dec_layer in enumerate(decoder_dict.values()):
+
+            for layer_spec in dec_layer:
+                if idx >= maxkey: continue
+
+                dec_func, dec_params = layer_spec
+                decoding = dec_func(decoding, *dec_params)
+
+                if dec_func not in self.PREPROCESSING_FUNCS:
+                    decoding = decoding.relu()
+
+        else:
+            decoding = decoding.sigmoid()
+        return [decoding]
 
 
 def with_ff_decoder(*decoder_args, **decoder_kwargs):

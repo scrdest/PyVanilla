@@ -1,12 +1,15 @@
 from torch.nn import Module as NNModule
 
+import logic.utils
 
 class BaseDecoder(NNModule):
+    PREPROCESSING_FUNCS = {
+        logic.utils.flat2matrix,
+        logic.utils.matrix2flat
+    }
+
     def __init__(self, *args, **kwargs):
-        pass
+        super().__init__()
 
-    def __call__(self, *args, **kwargs):
-        return self.forward(*args, **kwargs)
-
-    def forward(self, input, **kwargs):
+    def forward(self, data, *args, **kwargs):
         pass

@@ -10,39 +10,64 @@ from functools import wraps
 class FfEncoder(BaseEncoder):
     def __init__(self, inp_size, latent_dim, enc_depth=1, bottlenecking=1.15, verbose=1, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        self.layers = {}
 
         enc_inp_size = 1
         for x in inp_size: enc_inp_size *= x
         enc_out_size = None
+
         if verbose > 0: print('Encoder (linear): ')
+
         for i in range(1, 1 + enc_depth):
             enc_out_size = int(max(latent_dim, enc_inp_size // bottlenecking)) if i < enc_depth else latent_dim
             if verbose > 0: print(i, enc_out_size)
             if enc_inp_size == latent_dim and i + 1 < enc_depth:
                 print("Warning: reached minimum encoder size!")
 
-            newenc_weight = torch.Tensor(enc_out_size, enc_inp_size)
-            NN.init.normal_(newenc_weight, 0, 1)
+            newenc = NN.Linear(enc_inp_size, enc_out_size, bias=True)
+            NN.init.normal_(newenc.weight, 0, 1)
+            NN.init.normal_(newenc.bias, 0, 1)
 
-            newenc_weight_param = NN.Parameter(newenc_weight)
-            self.weights.append(newenc_weight_param)
-
-            newenc_bias = torch.Tensor(enc_out_size)
-            NN.init.normal_(newenc_bias, 0, 1)
-
-            newenc_bias_param = NN.Parameter(newenc_bias)
-            self.biases.append(newenc_bias_param)
-
-            newlinenc = (NN.functional.linear, (newenc_weight_param, newenc_bias_param))
-            self.encoder.setdefault(i, []).append(newlinenc)
+            newlinenc = (newenc, ())
+            self.layers.setdefault(i, []).append(newlinenc)
 
             enc_inp_size = enc_out_size
 
         self.out_size = enc_out_size
 
 
-    def forward(self, input, **kwargs):
-        pass
+    def forward(self, data, layer_norm=False, injective_noise=0.05, activation=NN.functional.relu, **kwargs):
+        encoding = data.flatten()
+
+        for idx, enc_layer in enumerate(self.layers.values()):
+
+            for layer_spec in enc_layer:
+
+                if idx < max(self.encoder.keys()):
+                    enc_func, enc_params = layer_spec
+                    encoding = enc_func(encoding, *enc_params)
+
+                    if enc_func not in self.PREPROCESSING_FUNCS:
+
+                        if layer_norm:
+                            encoding = (
+                                (encoding - encoding.mean()) / encoding.std()
+                            )
+
+                        if injective_noise > 0:
+                            encoding = (
+                                encoding + (
+                                    injective_noise * torch.normal(
+                                        mean=torch.zeros_like(encoding),
+                                        std=torch.ones_like(encoding)
+                                    )
+                                )
+                            )
+
+                        if activation:
+                            encoding = activation(encoding)
+
+        return encoding
 
 
 def with_ff_encoder(*encoder_args, **encoder_kwargs):
@@ -57,7 +82,7 @@ def with_ff_encoder(*encoder_args, **encoder_kwargs):
             constructor_kwargs.update({
                 PIPE_ARG_ENCODER: encoder
             })
-            decorated = constructor(*constructor_args, ** constructor_kwargs)
+            decorated = constructor(*constructor_args, **constructor_kwargs)
             return decorated
 
         return _wrapper

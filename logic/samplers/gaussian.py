@@ -18,9 +18,9 @@ class IsoGaussVISampler(BaseVISampler):
         self.stddev_transform = NN.Linear(input_size, latent_dims)
 
 
-    def encode(self, input, **kwargs):
-        mean = self.mean_transform(input)
-        log_var = self.stddev_transform(input)
+    def encode(self, data, *args, **kwargs):
+        mean = self.mean_transform(data)
+        log_var = self.stddev_transform(data)
         return mean, log_var
 
 
@@ -30,12 +30,10 @@ class IsoGaussVISampler(BaseVISampler):
         return mean + noise * stddev
 
 
-    def forward(self, input, **kwargs):
-        mean, log_var = self.encode(input)
+    def forward(self, data, *args, **kwargs):
+        mean, log_var = self.encode(data)
         z = self.reparameterize(mean, log_var)
-        return z, input, mean, log_var
-
-
+        return z, data, mean, log_var
 
 
 def with_isogauss_sampler(*sampler_args, **sampler_kwargs):

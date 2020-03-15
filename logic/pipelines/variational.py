@@ -15,6 +15,9 @@ class VariationalPipeline(BasePipeline):
         decoded = self.decoder.forward(latent)
         return decoded
 
+    def get_loss(self, inputs, outputs, *args, **kwargs):
+        pass
+
 
 def build_vi_pipeline(*args, **kwargs):
     passed_kwargs = kwargs.copy()

@@ -8,11 +8,11 @@ from functools import wraps
 
 
 class FfDecoder(BaseDecoder):
-    def __init__(self, input_size, latent_size, dec_depth=1, upscale=3.5, warn=True, *args, **kwargs):
+    def __init__(self, input_size, dec_depth=1, upscale=3.5, warn=True, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.layers = {}
 
-        dec_inp_size = int(latent_size)
+        dec_inp_size = int(input_size)
         dec_out_size = None
 
         for i in range(1, 1+dec_depth):

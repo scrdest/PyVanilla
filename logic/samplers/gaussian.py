@@ -6,6 +6,8 @@ from logic.samplers import BaseVISampler
 
 from functools import wraps
 
+from logic.utils import lazy_attach
+
 
 class IsoGaussVISampler(BaseVISampler):
     def __init__(self, input_size, latent_dims, *args, **kwargs):
@@ -14,8 +16,8 @@ class IsoGaussVISampler(BaseVISampler):
         self.input_size = input_size
         self.latent_dims = latent_dims
 
-        self.mean_transform = NN.Linear(input_size, latent_dims)
-        self.stddev_transform = NN.Linear(input_size, latent_dims)
+        self.mean_transform = lazy_attach(input_size, latent_dims)(NN.Linear)
+        self.stddev_transform = lazy_attach(input_size, latent_dims)(NN.Linear)
 
 
     def encode(self, data, *args, **kwargs):

@@ -8,20 +8,20 @@ from functools import wraps
 
 
 class FfEncoder(BaseEncoder):
-    def __init__(self, inp_size, latent_dim, enc_depth=1, bottlenecking=1.15, verbose=1, *args, **kwargs):
+    def __init__(self, input_sizes, output_size, enc_depth=1, bottlenecking=1.15, verbose=1, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.layers = {}
 
         enc_inp_size = 1
-        for x in inp_size: enc_inp_size *= x
+        for x in input_sizes: enc_inp_size *= x
         enc_out_size = None
 
         if verbose > 0: print('Encoder (linear): ')
 
         for i in range(1, 1 + enc_depth):
-            enc_out_size = int(max(latent_dim, enc_inp_size // bottlenecking)) if i < enc_depth else latent_dim
+            enc_out_size = int(max(output_size, enc_inp_size // bottlenecking)) if i < enc_depth else output_size
             if verbose > 0: print(i, enc_out_size)
-            if enc_inp_size == latent_dim and i + 1 < enc_depth:
+            if enc_inp_size == output_size and i + 1 < enc_depth:
                 print("Warning: reached minimum encoder size!")
 
             newenc = NN.Linear(enc_inp_size, enc_out_size, bias=True)

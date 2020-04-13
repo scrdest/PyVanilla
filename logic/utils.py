@@ -29,3 +29,19 @@ def flat2matrix(tens, batch_size=1, *args, **kwargs):
 
 def matrix2flat(tens, *args, **kwargs):
     return tens.flatten()
+
+
+def lazy_attach(*args, **kwargs):
+    instance = None
+
+    def _argdeco(instanceable):
+
+        def _argwrapper(*fargs, **fkwargs):
+            nonlocal instance
+            instance = instance or instanceable(*args, **kwargs)
+            result = instance(*fargs, **fkwargs)
+            return result
+
+        return _argwrapper
+
+    return _argdeco

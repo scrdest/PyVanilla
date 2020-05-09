@@ -1,13 +1,13 @@
 import torch
 import torch.nn as NN
 
-from logic.encoders.base import BaseEncoder
+from logic.abstract_defines.abcs import AbstractEncoder
 from logic.constants import *
 
 from functools import wraps
 
 
-class FfEncoder(BaseEncoder):
+class FfEncoder(AbstractEncoder):
     def __init__(self, input_sizes, output_size, enc_depth=1, bottlenecking=1.15, verbose=1, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.layers = {}

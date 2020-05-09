@@ -1,4 +1,5 @@
 import sys
+import typing
 
 import logging
 
@@ -17,11 +18,16 @@ mnist_transf = transforms.Compose([
 
 import torch.utils.data.dataloader as loader
 
+import logic.abstract_defines.abcs as custom_abcs
 from logic.utils import *
 
 
 class ModularVAE(NNModule):
-    def __init__(self, pipelines, *args, **kwargs):
+    def __init__(
+        self,
+        pipelines: typing.List[custom_abcs.AbstractPipeline],
+        *args, **kwargs
+    ):
         super().__init__(*args, **kwargs)
         self.pipelines = pipelines
 
@@ -47,27 +53,48 @@ class ModularVAE(NNModule):
 
     def training_step(self, batch, batch_idx, *args, **kwargs):
         x, y = batch
-        predicted, sampledists = self.forward(x)
-        losses = self.get_loss(x=x, predicted=predicted, expectation=self.expectation, actuals=sampledists)
+        outputs = {}
+        losses = {}
+
+        for pipeline in self.pipelines:
+            pipeline_output = pipeline.forward(x)
+            pipeline_loss = pipeline.get_loss(x, y, pipeline_output)
+            outputs[pipeline] = pipeline_output
+            losses[pipeline] = pipeline_loss
+
+        total_loss = sum(losses.values())
+        # total_reconstruction_losses = {}
+        # total_divergence_losses = {}
+
 
         tensorboard_logs = {
-            'train_total_loss': losses['total'],
-            'train_reconstruction_loss': losses['reconstruction'],
-            'train_divergence_loss': losses['latent']
+            'train_total_loss': total_loss
+            # 'train_reconstruction_loss': losses['reconstruction'],
+            # 'train_divergence_loss': losses['latent']
         }
+
         return_dict = {
-            'loss': losses['total'],
+            'loss': total_loss,
             'log': tensorboard_logs
         }
+
         return return_dict
 
 
     def validation_step(self, batch, batch_idx, *args, **kwargs):
         x, y = batch
-        predicted, sampledists = self.forward(x)
-        losses = self.get_loss(x=x, predicted=predicted, expectation=self.expectation, actuals=sampledists)
+        outputs = {}
+        losses = {}
+
+        for pipeline in self.pipelines:
+            pipeline_output = pipeline.forward(x)
+            pipeline_loss = pipeline.get_loss(x, y, pipeline_output)
+            outputs[pipeline] = pipeline_output
+            losses[pipeline] = pipeline_loss
+
+        total_loss = sum(losses.values())
         return_dict = {
-            'val_loss': losses['total'],
+            'val_loss': total_loss,
         }
         return return_dict
 

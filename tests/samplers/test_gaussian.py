@@ -1,6 +1,7 @@
 import pytest
 
 import logic.samplers.gaussian
+import logic.abstract_defines.protocols as protocols
 from logic.constants import *
 
 
@@ -10,6 +11,7 @@ def test_basic_instantiation():
         latent_dims=2
     )
     assert instance
+    # assert isinstance(instance, protocols.SamplerProtocol)
 
 
 def test_deco_instantiation():

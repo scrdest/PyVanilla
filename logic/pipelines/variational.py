@@ -1,13 +1,22 @@
 from logic.constants import *
-from logic.pipelines import BasePipeline
+from logic.abstract_defines import abcs
 
 
-class VariationalPipeline(BasePipeline):
-    def __init__(self, encoder, latent_sampler, decoder, *args, **kwargs):
+class VariationalPipeline(abcs.AbstractPipeline):
+
+    def __init__(
+        self,
+        encoder: abcs.AbstractEncoder,
+        latent_sampler: abcs.AbstractVISampler,
+        decoder: abcs.AbstractDecoder,
+        *args, **kwargs
+    ):
+
         super().__init__(*args, **kwargs)
         self.encoder = encoder
         self.latent_sampler = latent_sampler
         self.decoder = decoder
+
 
     def forward(self, *input, **kwargs):
         encoded = self.encoder.forward(*input)
@@ -15,8 +24,14 @@ class VariationalPipeline(BasePipeline):
         decoded = self.decoder.forward(latent)
         return decoded
 
+
     def get_loss(self, inputs, outputs, *args, **kwargs):
-        pass
+        encoder_loss = self.encoder.get_loss()
+        decoder_loss = self.decoder.get_loss()
+        latent_loss = self.latent_sampler.get_loss()
+        total_loss = encoder_loss + decoder_loss + latent_loss
+        return total_loss
+
 
 
 def build_vi_pipeline(*args, **kwargs):

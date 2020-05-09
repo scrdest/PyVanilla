@@ -1,1 +1,1 @@
-from logic.samplers.base import BaseVISampler
+from logic.abstract_defines.abcs import AbstractVISampler

@@ -2,14 +2,14 @@ import torch
 import torch.nn as NN
 
 from logic.constants import *
-from logic.samplers import BaseVISampler
+from logic.abstract_defines.abcs import AbstractVISampler
 
 from functools import wraps
 
 from logic.utils import lazy_attach
 
 
-class IsoGaussVISampler(BaseVISampler):
+class IsoGaussVISampler(AbstractVISampler):
     def __init__(self, input_size, latent_dims, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
@@ -26,7 +26,7 @@ class IsoGaussVISampler(BaseVISampler):
         return mean, log_var
 
 
-    def reparameterize(self, mean, log_var):
+    def sample(self, mean, log_var):
         stddev = torch.exp(0.5 * log_var)
         noise = torch.randn_like(stddev)
         return mean + noise * stddev
@@ -34,7 +34,7 @@ class IsoGaussVISampler(BaseVISampler):
 
     def forward(self, data, *args, **kwargs):
         mean, log_var = self.encode(data)
-        z = self.reparameterize(mean, log_var)
+        z = self.sample(mean, log_var)
         return z, data, mean, log_var
 
 

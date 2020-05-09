@@ -1,1 +1,1 @@
-from logic.pipelines.base import BasePipeline
+from logic.abstract_defines.abcs import AbstractPipeline

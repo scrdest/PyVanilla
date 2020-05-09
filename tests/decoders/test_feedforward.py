@@ -1,5 +1,6 @@
 import pytest
 
+import logic.abstract_defines.protocols as protocols
 import logic.decoders.feedforward
 from logic.constants import *
 
@@ -9,6 +10,7 @@ def test_basic_instantiation():
         input_size=10
     )
     assert instance
+    # assert isinstance(instance, protocols.DecoderProtocol)
 
 
 def test_deco_instantiation():

@@ -2,7 +2,9 @@ import pytest
 
 import logic.pipelines.deterministic
 
+import logic.abstract_defines.protocols as protocols
 from logic.constants import *
+
 from logic.encoders.feedforward import with_ff_encoder, FfEncoder
 from logic.samplers.gaussian import with_isogauss_sampler
 from logic.decoders.feedforward import with_ff_decoder, FfDecoder
@@ -18,6 +20,7 @@ def test_decorator_injection():
 
     built = ff_builder()
     assert built
+    # assert isinstance(built, protocols.PipelineProtocol)
 
 
 def test_encoder_attached():
@@ -32,6 +35,7 @@ def test_encoder_attached():
     built = ff_builder(encoder)
     assert built
     assert encoder is built.encoder
+    # assert isinstance(encoder, protocols.EncoderProtocol)
 
 
 def test_decoder_attached():
@@ -46,6 +50,7 @@ def test_decoder_attached():
     built = ff_builder(decoder)
     assert built
     assert decoder is built.decoder
+    # assert isinstance(decoder, protocols.DecoderProtocol)
 
 
 if __name__ == '__main__':

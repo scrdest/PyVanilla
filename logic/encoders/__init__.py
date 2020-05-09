@@ -1,1 +1,1 @@
-from logic.encoders.base import BaseEncoder
+from logic.abstract_defines.abcs import AbstractEncoder

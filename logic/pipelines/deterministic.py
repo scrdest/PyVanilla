@@ -1,9 +1,14 @@
 from logic.constants import *
-from logic.pipelines import BasePipeline
+from logic.abstract_defines import abcs, protocols
 
 
-class DeterministicPipeline(BasePipeline):
-    def __init__(self, encoder, decoder, *args, **kwargs):
+class DeterministicPipeline(abcs.AbstractPipeline):
+    def __init__(
+            self,
+            encoder: protocols.EncoderProtocol,
+            decoder: protocols.DecoderProtocol,
+            *args, **kwargs
+    ):
         super().__init__(*args, **kwargs)
         self.encoder = encoder
         self.decoder = decoder

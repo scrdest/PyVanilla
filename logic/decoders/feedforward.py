@@ -2,12 +2,12 @@ import torch
 import torch.nn as NN
 
 from logic.constants import *
-from logic.decoders.base import BaseDecoder
+from logic.abstract_defines.abcs import AbstractDecoder
 
 from functools import wraps
 
 
-class FfDecoder(BaseDecoder):
+class FfDecoder(AbstractDecoder):
     def __init__(self, input_size, dec_depth=1, upscale=3.5, warn=True, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.layers = {}
@@ -65,7 +65,7 @@ def with_ff_decoder(*decoder_args, **decoder_kwargs):
             constructor_kwargs.update({
                 PIPE_ARG_DECODER: decoder
             })
-            decorated = constructor(*constructor_args, ** constructor_kwargs)
+            decorated = constructor(*constructor_args, **constructor_kwargs)
             return decorated
 
         return _wrapper
